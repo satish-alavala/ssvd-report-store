@@ -30,18 +30,18 @@ jobs:
 
     steps:
       - name: Checkout app repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configure AWS credentials with OIDC
         if: ${{ env.AWS_GITHUB_ACTIONS_ROLE_ARN != '' }}
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ env.AWS_GITHUB_ACTIONS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Configure AWS credentials with access keys
         if: ${{ env.AWS_GITHUB_ACTIONS_ROLE_ARN == '' }}
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -79,7 +79,7 @@ jobs:
 
       - name: Checkout infra repo
         if: ${{ env.INFRA_REPO_TOKEN != '' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ env.INFRA_REPOSITORY }}
           ref: ${{ env.INFRA_BRANCH }}
