@@ -21,6 +21,7 @@ env:
   ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY || 'ssvd-report-store-prod' }}
   INFRA_REPOSITORY: sruthishtechnologies/ssvd-report-store-infra-ops
   INFRA_BRANCH: ${{ inputs.infra_branch || vars.INFRA_BRANCH || 'main' }}
+  INFRA_REPO_TOKEN: ${{ secrets.INFRA_REPO_TOKEN }}
 
 jobs:
   release:
@@ -70,15 +71,23 @@ jobs:
           docker push "${{ steps.ecr.outputs.registry }}/${ECR_REPOSITORY}:${GITHUB_SHA}"
           docker push "${{ steps.ecr.outputs.registry }}/${ECR_REPOSITORY}:latest"
 
+      - name: Warn when infra token is missing
+        if: ${{ env.INFRA_REPO_TOKEN == '' }}
+        run: |
+          echo "::warning::INFRA_REPO_TOKEN is missing or empty. App image ${GITHUB_SHA} was pushed to ECR, but ${INFRA_REPOSITORY} was not updated."
+          echo "Create a classic PAT (repo scope) or fine-grained PAT with Contents: Read and Write on ${INFRA_REPOSITORY}, then save it as the INFRA_REPO_TOKEN repository secret."
+
       - name: Checkout infra repo
+        if: ${{ env.INFRA_REPO_TOKEN != '' }}
         uses: actions/checkout@v4
         with:
           repository: ${{ env.INFRA_REPOSITORY }}
           ref: ${{ env.INFRA_BRANCH }}
           path: infra
-          token: ${{ secrets.INFRA_REPO_TOKEN }}
+          token: ${{ env.INFRA_REPO_TOKEN }}
 
       - name: Commit desired image tag to infra repo
+        if: ${{ env.INFRA_REPO_TOKEN != '' }}
         working-directory: infra
         run: |
           printf 'image_tag = "%s"\n' "${GITHUB_SHA}" > terraform/image.auto.tfvars
